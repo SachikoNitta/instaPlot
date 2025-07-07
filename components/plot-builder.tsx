@@ -255,6 +255,13 @@ export default function PlotBuilder() {
     setSelectedCardId(selectedCardId === cardId ? null : cardId)
   }
 
+  // Auto-organize cards when axis modes change
+  useEffect(() => {
+    if (cards.length > 0) {
+      organizeCards()
+    }
+  }, [xAxisMode, yAxisMode])
+
   // Close overlay when clicking elsewhere
   useEffect(() => {
     const handleClickOutside = () => setSelectedCardId(null)
@@ -275,9 +282,6 @@ export default function PlotBuilder() {
 
 
 
-            <Button variant="outline" onClick={organizeCards} className="ml-auto bg-transparent">
-              Auto Organize
-            </Button>
           </div>
 
         </div>
