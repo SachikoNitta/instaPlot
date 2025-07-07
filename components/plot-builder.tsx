@@ -300,7 +300,7 @@ export default function PlotBuilder() {
           </div>
 
           {/* Y-axis selector on left */}
-          <div className="absolute left-4 top-20 flex flex-col items-center gap-2 z-10">
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-10">
             <ArrowUp className="w-4 h-4 text-gray-400" />
             <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
               <SelectTrigger className="w-24">
