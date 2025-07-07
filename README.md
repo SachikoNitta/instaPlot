@@ -2,6 +2,8 @@
 
 A professional visual case management tool for organizing and analyzing case information cards in an interactive workspace. Perfect for investigators, researchers, and analysts who need to visualize relationships between events, people, and locations.
 
+![InstaPlot Screenshot](./public/screenshot.png)
+
 ## ✨ Features
 
 ### 🎯 Interactive Workspace
