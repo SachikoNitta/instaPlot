@@ -276,7 +276,11 @@ export default function PlotBuilder() {
       {/* Plot Area */}
       <div
         className="w-full h-full relative overflow-auto"
-        style={{ minHeight: "100vh" }}
+        style={{ 
+          minHeight: "100vh",
+          backgroundImage: `radial-gradient(circle, #d1d5db 1px, transparent 1px)`,
+          backgroundSize: '20px 20px'
+        }}
       >
           {/* InstaPlot logo at top left */}
           <div className="absolute top-4 left-4 z-10">
