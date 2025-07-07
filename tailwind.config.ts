@@ -10,6 +10,36 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "*.{js,ts,jsx,tsx,mdx}"
   ],
+  safelist: [
+    // Layout classes
+    'h-screen', 'w-full', 'h-full', 'relative', 'absolute', 'overflow-auto',
+    // Positioning
+    'top-4', 'left-4', 'right-4', 'bottom-4', 'left-1/2', 'top-1/2', 'top-20',
+    'transform', '-translate-x-1/2', '-translate-y-1/2',
+    // Z-index and display
+    'z-10', 'z-20', 'z-50', 'flex', 'flex-col', 'items-center', 'justify-center', 'gap-2',
+    // Typography
+    'text-xl', 'text-lg', 'text-sm', 'text-xs', 'font-bold', 'font-medium', 'font-semibold',
+    // Colors and backgrounds
+    'text-gray-800', 'text-gray-400', 'text-gray-600', 'text-gray-500', 'text-gray-700',
+    'bg-white', 'bg-black', 'bg-gray-50', 'bg-gray-100', 'bg-red-50',
+    'hover:bg-gray-800', 'hover:bg-gray-100', 'hover:bg-red-50',
+    // Borders and shapes
+    'rounded-full', 'rounded-lg', 'border', 'shadow-md', 'shadow-lg', 'shadow-xl',
+    'hover:shadow-lg', 'hover:shadow-xl',
+    // Transitions and animations
+    'transition-all', 'transition-shadow', 'transition-colors', 'duration-200',
+    // Sizing
+    'w-4', 'h-4', 'w-6', 'h-6', 'w-12', 'h-12', 'w-24', 'w-64',
+    // Spacing
+    'p-2', 'p-4', 'p-6', 'pb-2', 'mt-4', 'mt-6', 'mb-4', 'mx-4', 'max-w-md',
+    // Background opacity
+    'bg-white/90', 'bg-black/50',
+    // Cursor
+    'cursor-move', 'cursor-pointer',
+    // Hover states
+    'hover:scale-1.05'
+  ],
   theme: {
   	extend: {
   		colors: {
