@@ -159,6 +159,18 @@ export default function PlotBuilder() {
     const file = event.target.files?.[0]
     if (!file) return
 
+    // Show warning if there are existing cards
+    if (cards.length > 0) {
+      const confirmImport = confirm(
+        `⚠️ Warning: Importing will replace all ${cards.length} existing cards.\n\nThis action cannot be undone. Do you want to continue?`
+      )
+      if (!confirmImport) {
+        // Reset input value to allow selecting the same file again
+        event.target.value = ""
+        return
+      }
+    }
+
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
@@ -203,7 +215,7 @@ export default function PlotBuilder() {
         }
 
         if (validCards.length > 0) {
-          setCards([...cards, ...validCards])
+          setCards(validCards)
         }
       } catch (error) {
         console.error("Error importing cards:", error)
