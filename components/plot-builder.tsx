@@ -272,13 +272,12 @@ export default function PlotBuilder() {
   }, [selectedCardId])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Plot Area */}
-        <div
-          className="bg-white rounded-lg shadow-sm border p-6 relative overflow-auto"
-          style={{ minHeight: "600px", maxHeight: "800px" }}
-        >
+    <div className="h-screen bg-white">
+      {/* Plot Area */}
+      <div
+        className="w-full h-full relative overflow-auto"
+        style={{ minHeight: "100vh" }}
+      >
           {/* InstaPlot logo at top left */}
           <div className="absolute top-4 left-4 z-10">
             <div className="text-xl font-bold text-gray-800">InstaPlot</div>
@@ -545,7 +544,6 @@ export default function PlotBuilder() {
             </div>
           </div>
         )}
-      </div>
     </div>
   )
 }
