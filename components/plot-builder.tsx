@@ -272,10 +272,6 @@ export default function PlotBuilder() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="text-xl font-bold text-gray-800">InstaPlot</div>
             
-            <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Card
-            </Button>
 
             <div className="relative">
               <Input
@@ -323,63 +319,6 @@ export default function PlotBuilder() {
             </Button>
           </div>
 
-          {/* Create Card Form */}
-          {showForm && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="time">Time</Label>
-                  <Input
-                    id="time"
-                    type="datetime-local"
-                    value={newCard.time}
-                    onChange={(e) => setNewCard({ ...newCard, time: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="actor">Actor</Label>
-                  <Input
-                    id="actor"
-                    placeholder="Person involved"
-                    value={newCard.actor}
-                    onChange={(e) => setNewCard({ ...newCard, actor: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="place">Place</Label>
-                  <Input
-                    id="place"
-                    placeholder="Location"
-                    value={newCard.place}
-                    onChange={(e) => setNewCard({ ...newCard, place: e.target.value })}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="is-lie"
-                    checked={newCard.is_lie}
-                    onCheckedChange={(checked) => setNewCard({ ...newCard, is_lie: checked })}
-                  />
-                  <Label htmlFor="is-lie">Mark as lie</Label>
-                </div>
-              </div>
-              <div className="mt-4">
-                <Label htmlFor="claims">Claims</Label>
-                <Textarea
-                  id="claims"
-                  placeholder="What was claimed or observed..."
-                  value={newCard.claims}
-                  onChange={(e) => setNewCard({ ...newCard, claims: e.target.value })}
-                />
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleCreateCard}>Create Card</Button>
-                <Button variant="outline" onClick={() => setShowForm(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Plot Area */}
@@ -469,11 +408,80 @@ export default function PlotBuilder() {
             <div className="absolute inset-0 flex items-center justify-center text-gray-500">
               <div className="text-center">
                 <Plus className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No cards yet. Click "Add Card" to get started.</p>
+                <p>No cards yet. Click the + button to get started.</p>
               </div>
             </div>
           )}
+
+          {/* Floating Add Card Button */}
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="absolute bottom-4 right-4 w-12 h-12 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-10"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
         </div>
+
+        {/* Create Card Modal */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4">Create New Card</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="time">Time</Label>
+                  <Input
+                    id="time"
+                    type="datetime-local"
+                    value={newCard.time}
+                    onChange={(e) => setNewCard({ ...newCard, time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="actor">Actor</Label>
+                  <Input
+                    id="actor"
+                    placeholder="Person involved"
+                    value={newCard.actor}
+                    onChange={(e) => setNewCard({ ...newCard, actor: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="place">Place</Label>
+                  <Input
+                    id="place"
+                    placeholder="Location"
+                    value={newCard.place}
+                    onChange={(e) => setNewCard({ ...newCard, place: e.target.value })}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="is-lie"
+                    checked={newCard.is_lie}
+                    onCheckedChange={(checked) => setNewCard({ ...newCard, is_lie: checked })}
+                  />
+                  <Label htmlFor="is-lie">Mark as lie</Label>
+                </div>
+                <div>
+                  <Label htmlFor="claims">Claims</Label>
+                  <Textarea
+                    id="claims"
+                    placeholder="What was claimed or observed..."
+                    value={newCard.claims}
+                    onChange={(e) => setNewCard({ ...newCard, claims: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-6">
+                <Button onClick={handleCreateCard}>Create Card</Button>
+                <Button variant="outline" onClick={() => setShowForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Edit Card Modal */}
         {editingCard && (
