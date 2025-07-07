@@ -274,23 +274,16 @@ export default function PlotBuilder() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Controls */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="text-xl font-bold text-gray-800">InstaPlot</div>
-            
-
-
-
-          </div>
-
-        </div>
-
         {/* Plot Area */}
         <div
           className="bg-white rounded-lg shadow-sm border p-6 relative overflow-auto"
           style={{ minHeight: "600px", maxHeight: "800px" }}
         >
+          {/* InstaPlot logo at top left */}
+          <div className="absolute top-4 left-4 z-10">
+            <div className="text-xl font-bold text-gray-800">InstaPlot</div>
+          </div>
+
           {/* X-axis selector at top */}
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-10">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
@@ -308,7 +301,7 @@ export default function PlotBuilder() {
           </div>
 
           {/* Y-axis selector on left */}
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-10">
+          <div className="absolute left-4 top-20 flex flex-col items-center gap-2 z-10">
             <ArrowUp className="w-4 h-4 text-gray-400" />
             <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
               <SelectTrigger className="w-24">
