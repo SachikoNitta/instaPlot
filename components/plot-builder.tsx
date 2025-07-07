@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Upload, Trash2, Edit } from "lucide-react"
+import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Upload, Trash2, Edit, ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react"
 import { motion } from "framer-motion"
 
 interface CaseCard {
@@ -286,33 +286,6 @@ export default function PlotBuilder() {
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Label className="text-sm font-medium">X-axis:</Label>
-              <Select value={xAxisMode} onValueChange={(value: "place" | "actor" | "time") => setXAxisMode(value)}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="place">Place</SelectItem>
-                  <SelectItem value="actor">Actor</SelectItem>
-                  <SelectItem value="time">Time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Label className="text-sm font-medium">Y-axis:</Label>
-              <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="place">Place</SelectItem>
-                  <SelectItem value="actor">Actor</SelectItem>
-                  <SelectItem value="time">Time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <Button variant="outline" onClick={organizeCards} className="ml-auto bg-transparent">
               Auto Organize
@@ -326,6 +299,37 @@ export default function PlotBuilder() {
           className="bg-white rounded-lg shadow-sm border p-6 relative overflow-auto"
           style={{ minHeight: "600px", maxHeight: "800px" }}
         >
+          {/* X-axis selector at top */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-10">
+            <ArrowLeft className="w-4 h-4 text-gray-400" />
+            <Select value={xAxisMode} onValueChange={(value: "place" | "actor" | "time") => setXAxisMode(value)}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="place">Place</SelectItem>
+                <SelectItem value="actor">Actor</SelectItem>
+                <SelectItem value="time">Time</SelectItem>
+              </SelectContent>
+            </Select>
+            <ArrowRight className="w-4 h-4 text-gray-400" />
+          </div>
+
+          {/* Y-axis selector on left */}
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-10">
+            <ArrowUp className="w-4 h-4 text-gray-400" />
+            <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="place">Place</SelectItem>
+                <SelectItem value="actor">Actor</SelectItem>
+                <SelectItem value="time">Time</SelectItem>
+              </SelectContent>
+            </Select>
+            <ArrowDown className="w-4 h-4 text-gray-400" />
+          </div>
           {/* Cards */}
           {cards.map((card) => (
             <motion.div
