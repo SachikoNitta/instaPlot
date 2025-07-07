@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Upload } from "lucide-react"
+import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Upload, Trash2, Edit } from "lucide-react"
 import { motion } from "framer-motion"
 
 interface CaseCard {
@@ -37,6 +37,8 @@ export default function PlotBuilder() {
     claims: "",
     is_lie: false,
   })
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+  const [editingCard, setEditingCard] = useState<CaseCard | null>(null)
 
   // Load cards from localStorage on component mount
   useEffect(() => {
@@ -214,6 +216,42 @@ export default function PlotBuilder() {
     event.target.value = ""
   }
 
+  const handleDeleteCard = (cardId: string) => {
+    setCards(cards.filter(card => card.id !== cardId))
+    setSelectedCardId(null)
+  }
+
+  const handleEditCard = (cardId: string) => {
+    const cardToEdit = cards.find(card => card.id === cardId)
+    if (cardToEdit) {
+      setEditingCard(cardToEdit)
+      setSelectedCardId(null)
+    }
+  }
+
+  const handleUpdateCard = () => {
+    if (!editingCard) return
+    
+    setCards(cards.map(card => 
+      card.id === editingCard.id ? editingCard : card
+    ))
+    setEditingCard(null)
+  }
+
+  const handleCardClick = (cardId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedCardId(selectedCardId === cardId ? null : cardId)
+  }
+
+  // Close overlay when clicking elsewhere
+  useEffect(() => {
+    const handleClickOutside = () => setSelectedCardId(null)
+    if (selectedCardId) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [selectedCardId])
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -350,8 +388,10 @@ export default function PlotBuilder() {
               animate={{ x: card.x, y: card.y }}
               className="absolute cursor-move"
               whileDrag={{ scale: 1.05, zIndex: 10 }}
+              onClick={(e) => handleCardClick(card.id, e)}
             >
-              <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
+              <div className="relative">
+                <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <Badge variant={card.is_lie ? "destructive" : "default"} className="text-xs">
@@ -385,6 +425,31 @@ export default function PlotBuilder() {
                   </div>
                 </CardContent>
               </Card>
+              
+              {/* Overlay with action buttons */}
+              {selectedCardId === card.id && (
+                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleEditCard(card.id)
+                    }}
+                    className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
+                  >
+                    <Edit className="w-4 h-4 text-gray-700" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteCard(card.id)
+                    }}
+                    className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </button>
+                </div>
+              )}
+            </div>
             </motion.div>
           ))}
 
@@ -397,6 +462,64 @@ export default function PlotBuilder() {
             </div>
           )}
         </div>
+
+        {/* Edit Card Modal */}
+        {editingCard && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4">Edit Card</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-time">Time</Label>
+                  <Input
+                    id="edit-time"
+                    type="datetime-local"
+                    value={editingCard.time}
+                    onChange={(e) => setEditingCard({ ...editingCard, time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-actor">Actor</Label>
+                  <Input
+                    id="edit-actor"
+                    value={editingCard.actor}
+                    onChange={(e) => setEditingCard({ ...editingCard, actor: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-place">Place</Label>
+                  <Input
+                    id="edit-place"
+                    value={editingCard.place}
+                    onChange={(e) => setEditingCard({ ...editingCard, place: e.target.value })}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="edit-is-lie"
+                    checked={editingCard.is_lie}
+                    onCheckedChange={(checked) => setEditingCard({ ...editingCard, is_lie: checked })}
+                  />
+                  <Label htmlFor="edit-is-lie">Mark as lie</Label>
+                </div>
+                <div>
+                  <Label htmlFor="edit-claims">Claims</Label>
+                  <Textarea
+                    id="edit-claims"
+                    value={editingCard.claims}
+                    onChange={(e) => setEditingCard({ ...editingCard, claims: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-6">
+                <Button onClick={handleUpdateCard}>Save Changes</Button>
+                <Button variant="outline" onClick={() => setEditingCard(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
