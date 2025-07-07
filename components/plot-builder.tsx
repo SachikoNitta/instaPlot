@@ -273,18 +273,6 @@ export default function PlotBuilder() {
             <div className="text-xl font-bold text-gray-800">InstaPlot</div>
             
 
-            <div className="relative">
-              <Input
-                type="file"
-                accept=".json"
-                onChange={handleImportCards}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
-              <Button variant="outline" className="flex items-center gap-2">
-                <Upload className="w-4 h-4" />
-                Import JSON
-              </Button>
-            </div>
 
 
             <Button variant="outline" onClick={organizeCards} className="ml-auto bg-transparent">
@@ -329,6 +317,22 @@ export default function PlotBuilder() {
               </SelectContent>
             </Select>
             <ArrowDown className="w-4 h-4 text-gray-400" />
+          </div>
+
+          {/* Import JSON button at top right */}
+          <div className="absolute top-4 right-4 z-10">
+            <div className="relative">
+              <Input
+                type="file"
+                accept=".json"
+                onChange={handleImportCards}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <Button variant="outline" className="flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                Import JSON
+              </Button>
+            </div>
           </div>
           {/* Cards */}
           {cards.map((card) => (
