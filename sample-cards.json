@@ -1,0 +1,28 @@
+[
+  {
+    "id": "test-1",
+    "time": "2024-01-20T10:00",
+    "actor": "Alice Johnson",
+    "place": "Central Park",
+    "claims": "Witnessed the incident near the fountain",
+    "is_lie": false,
+    "x": 150,
+    "y": 150
+  },
+  {
+    "id": "test-2",
+    "time": "2024-01-20T11:30",
+    "actor": "Bob Wilson",
+    "place": "Library",
+    "claims": "Claims to have been studying all morning",
+    "is_lie": true,
+    "x": 250,
+    "y": 250
+  },
+  {
+    "time": "2024-01-20T14:15",
+    "actor": "Carol Davis",
+    "place": "Coffee Shop",
+    "claims": "Saw the suspect leave in a blue car"
+  }
+]

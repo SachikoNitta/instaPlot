@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle } from "lucide-react"
+import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Upload } from "lucide-react"
 import { motion } from "framer-motion"
 
 interface CaseCard {
@@ -153,6 +153,67 @@ export default function PlotBuilder() {
     setCards(updatedCards)
   }
 
+  const handleImportCards = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const importedData = JSON.parse(content)
+        
+        // Validate imported data
+        if (!Array.isArray(importedData)) {
+          alert("Invalid JSON format. Expected an array of cards.")
+          return
+        }
+
+        const validCards: CaseCard[] = []
+        const errors: string[] = []
+
+        importedData.forEach((item, index) => {
+          // Validate required fields
+          if (!item.time || !item.actor || !item.place || !item.claims) {
+            errors.push(`Card ${index + 1}: Missing required fields (time, actor, place, claims)`)
+            return
+          }
+
+          // Create valid card with defaults for missing optional fields
+          const card: CaseCard = {
+            id: item.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            time: item.time,
+            actor: item.actor,
+            place: item.place,
+            claims: item.claims,
+            is_lie: item.is_lie || false,
+            x: item.x || Math.random() * 400 + 100,
+            y: item.y || Math.random() * 300 + 100,
+          }
+
+          validCards.push(card)
+        })
+
+        if (errors.length > 0) {
+          alert(`Import completed with errors:\n${errors.join('\n')}\n\nValid cards: ${validCards.length}`)
+        } else {
+          alert(`Successfully imported ${validCards.length} cards`)
+        }
+
+        if (validCards.length > 0) {
+          setCards([...cards, ...validCards])
+        }
+      } catch (error) {
+        console.error("Error importing cards:", error)
+        alert("Error reading JSON file. Please check the file format.")
+      }
+    }
+
+    reader.readAsText(file)
+    // Reset input value to allow importing the same file again
+    event.target.value = ""
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -165,6 +226,19 @@ export default function PlotBuilder() {
               <Plus className="w-4 h-4" />
               Add Card
             </Button>
+
+            <div className="relative">
+              <Input
+                type="file"
+                accept=".json"
+                onChange={handleImportCards}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <Button variant="outline" className="flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                Import JSON
+              </Button>
+            </div>
 
             <div className="flex items-center gap-2">
               <Label className="text-sm font-medium">X-axis:</Label>
