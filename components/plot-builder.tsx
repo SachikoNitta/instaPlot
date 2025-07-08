@@ -41,6 +41,7 @@ export default function PlotBuilder() {
   const [editingCard, setEditingCard] = useState<CaseCard | null>(null)
   const [showJsonEditor, setShowJsonEditor] = useState(false)
   const [jsonContent, setJsonContent] = useState("")
+  const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
 
   // Load cards from localStorage on component mount
   useEffect(() => {
@@ -226,7 +227,10 @@ export default function PlotBuilder() {
 
   const handleCardClick = (cardId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    setSelectedCardId(selectedCardId === cardId ? null : cardId)
+    // Only allow selection if the card wasn't just dragged
+    if (draggingCardId !== cardId) {
+      setSelectedCardId(selectedCardId === cardId ? null : cardId)
+    }
   }
 
   // Auto-organize cards when axis modes change
@@ -337,8 +341,14 @@ export default function PlotBuilder() {
                   key={card.id}
                   drag
                   dragMomentum={false}
+                  onDragStart={() => {
+                    setDraggingCardId(card.id)
+                    setSelectedCardId(null)
+                  }}
                   onDragEnd={(_, info) => {
                     updateCardPosition(card.id, card.x + info.offset.x, card.y + info.offset.y)
+                    // Clear dragging state after a small delay to prevent immediate click selection
+                    setTimeout(() => setDraggingCardId(null), 100)
                   }}
                   initial={{ x: card.x, y: card.y }}
                   animate={{ x: card.x, y: card.y }}
@@ -383,7 +393,7 @@ export default function PlotBuilder() {
                     </Card>
                     
                     {/* Overlay with action buttons */}
-                    {selectedCardId === card.id && (
+                    {selectedCardId === card.id && draggingCardId !== card.id && (
                       <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
                         <button
                           onClick={(e) => {
