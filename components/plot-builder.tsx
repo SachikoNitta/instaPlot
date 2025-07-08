@@ -253,16 +253,20 @@ export default function PlotBuilder() {
         style={{ 
           minHeight: "100vh",
           backgroundImage: `radial-gradient(circle, #d1d5db 1px, transparent 1px)`,
-          backgroundSize: '20px 20px'
+          backgroundSize: '20px 20px',
+          paddingLeft: '200px',
+          paddingTop: '80px',
+          paddingRight: '80px',
+          paddingBottom: '80px'
         }}
       >
           {/* InstaPlot logo at top left */}
-          <div className="absolute top-4 left-16 z-10">
+          <div className="fixed top-4 left-16 z-30 pointer-events-none">
             <div className="text-xl font-bold text-gray-800">InstaPlot</div>
           </div>
 
           {/* X-axis selector at top */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-10">
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-30">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
             <Select value={xAxisMode} onValueChange={(value: "place" | "actor" | "time") => setXAxisMode(value)}>
               <SelectTrigger className="w-24">
@@ -278,7 +282,7 @@ export default function PlotBuilder() {
           </div>
 
           {/* Y-axis selector on left */}
-          <div className="absolute left-16 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-10">
+          <div className="fixed left-16 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-30">
             <ArrowUp className="w-4 h-4 text-gray-400" />
             <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
               <SelectTrigger className="w-24">
@@ -294,7 +298,7 @@ export default function PlotBuilder() {
           </div>
 
           {/* Activity Bar - VSCode style */}
-          <div className="absolute left-0 top-0 h-full w-12 bg-gray-900 flex flex-col items-center py-4 gap-2 z-20">
+          <div className="fixed left-0 top-0 h-full w-12 bg-gray-900 flex flex-col items-center py-4 gap-2 z-40">
             {/* Toggle JSON Editor */}
             <button 
               onClick={handleToggleJsonEditor}
@@ -417,7 +421,7 @@ export default function PlotBuilder() {
               {/* Floating Add Card Button */}
               <button
                 onClick={() => setShowForm(!showForm)}
-                className="absolute bottom-4 right-4 w-12 h-12 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-10"
+                className="fixed bottom-4 right-4 w-12 h-12 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-30"
               >
                 <Plus className="w-6 h-6" />
               </button>
