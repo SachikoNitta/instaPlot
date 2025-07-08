@@ -28,95 +28,193 @@ const MemoizedCard = memo(({
   card, 
   selectedCardId, 
   draggingCardId, 
+  inlineEditingCardId,
   onDragStart, 
   onDragEnd, 
   onClick, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onInlineEdit,
+  onInlineUpdate,
+  onInlineEditComplete
 }: {
   card: CaseCard
   selectedCardId: string | null
   draggingCardId: string | null
+  inlineEditingCardId: string | null
   onDragStart: (id: string) => void
   onDragEnd: (id: string, x: number, y: number) => void
   onClick: (id: string, e: React.MouseEvent) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-}) => (
-  <motion.div
-    key={card.id}
-    drag
-    dragMomentum={false}
-    onDragStart={() => onDragStart(card.id)}
-    onDragEnd={(_, info) => onDragEnd(card.id, card.x + info.offset.x, card.y + info.offset.y)}
-    initial={{ x: card.x, y: card.y }}
-    animate={{ x: card.x, y: card.y }}
-    className="absolute cursor-move"
-    whileDrag={{ scale: 1.05, zIndex: 10 }}
-    onClick={(e) => onClick(card.id, e)}
-  >
-    <div className="relative">
-      <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <Badge variant={card.is_lie ? "destructive" : "default"} className="text-xs">
-              {card.is_lie ? (
-                <>
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  Lie
-                </>
+  onInlineEdit: (id: string) => void
+  onInlineUpdate: (id: string, field: keyof CaseCard, value: string | boolean) => void
+  onInlineEditComplete: () => void
+}) => {
+  const isInlineEditing = inlineEditingCardId === card.id
+
+  return (
+    <motion.div
+      key={card.id}
+      drag={!isInlineEditing}
+      dragMomentum={false}
+      onDragStart={() => onDragStart(card.id)}
+      onDragEnd={(_, info) => onDragEnd(card.id, card.x + info.offset.x, card.y + info.offset.y)}
+      initial={{ x: card.x, y: card.y }}
+      animate={{ x: card.x, y: card.y }}
+      className="absolute cursor-move"
+      whileDrag={{ scale: 1.05, zIndex: 10 }}
+      onClick={(e) => !isInlineEditing && onClick(card.id, e)}
+    >
+      <div className="relative">
+        <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
+          {/* Inline Edit Button */}
+          {!isInlineEditing && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onInlineEdit(card.id)
+              }}
+              className="absolute top-2 right-2 w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center z-10 transition-colors"
+            >
+              <Edit className="w-3 h-3 text-gray-600" />
+            </button>
+          )}
+          
+          {/* Save Button when editing */}
+          {isInlineEditing && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onInlineEditComplete()
+              }}
+              className="absolute top-2 right-2 w-6 h-6 bg-green-100 hover:bg-green-200 rounded-full flex items-center justify-center z-10 transition-colors"
+            >
+              <CheckCircle className="w-3 h-3 text-green-600" />
+            </button>
+          )}
+
+          <CardHeader className="pb-2 pr-10">
+            <div className="flex items-center justify-between">
+              {isInlineEditing ? (
+                <Switch
+                  checked={card.is_lie}
+                  onCheckedChange={(checked) => onInlineUpdate(card.id, 'is_lie', checked)}
+                  onClick={(e) => e.stopPropagation()}
+                />
               ) : (
-                <>
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Truth
-                </>
+                <Badge variant={card.is_lie ? "destructive" : "default"} className="text-xs">
+                  {card.is_lie ? (
+                    <>
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      Lie
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Truth
+                    </>
+                  )}
+                </Badge>
               )}
-            </Badge>
+            </div>
+            {isInlineEditing ? (
+              <Textarea
+                value={card.claims}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onInlineUpdate(card.id, 'claims', e.target.value)
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="text-sm font-medium min-h-[60px] resize-none"
+                placeholder="Claims..."
+              />
+            ) : (
+              <CardTitle className="text-sm font-medium">{card.claims}</CardTitle>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              <Clock className="w-3 h-3" />
+              {isInlineEditing ? (
+                <Input
+                  type="datetime-local"
+                  value={card.time}
+                  onChange={(e) => {
+                    e.stopPropagation()
+                    onInlineUpdate(card.id, 'time', e.target.value)
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs h-6 px-1"
+                />
+              ) : (
+                new Date(card.time).toLocaleString()
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              <User className="w-3 h-3" />
+              {isInlineEditing ? (
+                <Input
+                  value={card.actor}
+                  onChange={(e) => {
+                    e.stopPropagation()
+                    onInlineUpdate(card.id, 'actor', e.target.value)
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs h-6 px-1"
+                  placeholder="Actor..."
+                />
+              ) : (
+                card.actor
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              <MapPin className="w-3 h-3" />
+              {isInlineEditing ? (
+                <Input
+                  value={card.place}
+                  onChange={(e) => {
+                    e.stopPropagation()
+                    onInlineUpdate(card.id, 'place', e.target.value)
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs h-6 px-1"
+                  placeholder="Place..."
+                />
+              ) : (
+                card.place
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Overlay with action buttons */}
+        {selectedCardId === card.id && draggingCardId !== card.id && !isInlineEditing && (
+          <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(card.id)
+              }}
+              className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
+            >
+              <Edit className="w-4 h-4 text-gray-700" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(card.id)
+              }}
+              className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </button>
           </div>
-          <CardTitle className="text-sm font-medium">{card.claims}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            <Clock className="w-3 h-3" />
-            {new Date(card.time).toLocaleString()}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            <User className="w-3 h-3" />
-            {card.actor}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            <MapPin className="w-3 h-3" />
-            {card.place}
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Overlay with action buttons */}
-      {selectedCardId === card.id && draggingCardId !== card.id && (
-        <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onEdit(card.id)
-            }}
-            className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
-          >
-            <Edit className="w-4 h-4 text-gray-700" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(card.id)
-            }}
-            className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
-        </div>
-      )}
-    </div>
-  </motion.div>
-))
+        )}
+      </div>
+    </motion.div>
+  )
+})
 
 export default function PlotBuilder() {
   const [cards, setCards] = useState<CaseCard[]>([])
@@ -137,6 +235,7 @@ export default function PlotBuilder() {
   const [showJsonEditor, setShowJsonEditor] = useState(false)
   const [jsonContent, setJsonContent] = useState("")
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
+  const [inlineEditingCardId, setInlineEditingCardId] = useState<string | null>(null)
 
   // Load cards from localStorage on component mount
   useEffect(() => {
@@ -343,6 +442,21 @@ export default function PlotBuilder() {
     setTimeout(() => setDraggingCardId(null), 100)
   }, [])
 
+  const handleInlineEdit = useCallback((cardId: string) => {
+    setInlineEditingCardId(cardId)
+    setSelectedCardId(null)
+  }, [])
+
+  const handleInlineUpdate = useCallback((cardId: string, field: keyof CaseCard, value: string | boolean) => {
+    setCards(prev => prev.map(card => 
+      card.id === cardId ? { ...card, [field]: value } : card
+    ))
+  }, [])
+
+  const handleInlineEditComplete = useCallback(() => {
+    setInlineEditingCardId(null)
+  }, [])
+
   // Auto-organize cards when axis modes change
   useEffect(() => {
     organizeCards()
@@ -447,11 +561,15 @@ export default function PlotBuilder() {
                   card={card}
                   selectedCardId={selectedCardId}
                   draggingCardId={draggingCardId}
+                  inlineEditingCardId={inlineEditingCardId}
                   onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
                   onClick={handleCardClick}
                   onEdit={handleEditCard}
                   onDelete={handleDeleteCard}
+                  onInlineEdit={handleInlineEdit}
+                  onInlineUpdate={handleInlineUpdate}
+                  onInlineEditComplete={handleInlineEditComplete}
                 />
               ))}
 
