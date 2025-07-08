@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Trash2, Edit, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Code } from "lucide-react"
+import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Trash2, Edit, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, PenTool } from "lucide-react"
 import { motion } from "framer-motion"
 
 interface CaseCard {
@@ -258,80 +258,77 @@ export default function PlotBuilder() {
           minHeight: "100vh",
           backgroundImage: `radial-gradient(circle, #d1d5db 1px, transparent 1px)`,
           backgroundSize: '20px 20px',
-          paddingLeft: '200px',
+          paddingLeft: '80px',
           paddingTop: '80px',
           paddingRight: '80px',
           paddingBottom: '80px'
         }}
       >
           {/* InstaPlot logo at top left */}
-          <div className="fixed top-4 left-16 z-30 pointer-events-none">
-            <div className="text-xl font-bold text-gray-800">InstaPlot</div>
-          </div>
+          {!showJsonEditor && (
+            <div className="fixed top-4 left-4 z-30 pointer-events-none">
+              <div className="text-xl font-bold text-gray-800">InstaPlot</div>
+            </div>
+          )}
 
           {/* X-axis selector at top */}
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-30">
-            <ArrowLeft className="w-4 h-4 text-gray-400" />
-            <Select value={xAxisMode} onValueChange={(value: "place" | "actor" | "time") => setXAxisMode(value)}>
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="place">Place</SelectItem>
-                <SelectItem value="actor">Actor</SelectItem>
-                <SelectItem value="time">Time</SelectItem>
-              </SelectContent>
-            </Select>
-            <ArrowRight className="w-4 h-4 text-gray-400" />
-          </div>
+          {!showJsonEditor && (
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-30">
+              <ArrowLeft className="w-4 h-4 text-gray-400" />
+              <Select value={xAxisMode} onValueChange={(value: "place" | "actor" | "time") => setXAxisMode(value)}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="place">Place</SelectItem>
+                  <SelectItem value="actor">Actor</SelectItem>
+                  <SelectItem value="time">Time</SelectItem>
+                </SelectContent>
+              </Select>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+            </div>
+          )}
 
           {/* Y-axis selector on left */}
-          <div className="fixed left-16 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-30">
-            <ArrowUp className="w-4 h-4 text-gray-400" />
-            <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="place">Place</SelectItem>
-                <SelectItem value="actor">Actor</SelectItem>
-                <SelectItem value="time">Time</SelectItem>
-              </SelectContent>
-            </Select>
-            <ArrowDown className="w-4 h-4 text-gray-400" />
-          </div>
+          {!showJsonEditor && (
+            <div className="fixed left-4 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-30">
+              <ArrowUp className="w-4 h-4 text-gray-400" />
+              <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="place">Place</SelectItem>
+                  <SelectItem value="actor">Actor</SelectItem>
+                  <SelectItem value="time">Time</SelectItem>
+                </SelectContent>
+              </Select>
+              <ArrowDown className="w-4 h-4 text-gray-400" />
+            </div>
+          )}
 
-          {/* Activity Bar - VSCode style */}
-          <div className="fixed left-0 top-0 h-full w-12 bg-gray-900 flex flex-col items-center py-4 gap-2 z-40">
-            {/* Toggle JSON Editor */}
-            <button 
-              onClick={handleToggleJsonEditor}
-              className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
-                showJsonEditor 
-                  ? 'bg-gray-700 text-white' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              <Code className="w-4 h-4" />
-            </button>
-
-          </div>
+          {/* JSON Editor Toggle Button */}
+          <button 
+            onClick={handleToggleJsonEditor}
+            className={`fixed top-4 right-4 px-3 py-1 text-xs text-gray-400 hover:text-gray-600 transition-colors z-30 flex items-center gap-1 ${
+              showJsonEditor 
+                ? 'text-gray-700' 
+                : ''
+            }`}
+          >
+            <PenTool className="w-3 h-3" />
+            JSON
+          </button>
 
           {/* JSON Editor Pane */}
           {showJsonEditor ? (
-            <div className="absolute left-16 top-4 right-4 bottom-4 bg-white rounded-lg shadow-sm border p-6 z-10">
-              <div className="h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">JSON Editor</h2>
-                </div>
-                
-                <Textarea
-                  value={jsonContent}
-                  onChange={(e) => setJsonContent(e.target.value)}
-                  placeholder="Paste your JSON data here or click 'Export to Editor' to load current cards..."
-                  className="flex-1 font-mono text-sm resize-none"
-                />
-              </div>
+            <div className="fixed inset-0 bg-white z-10">
+              <Textarea
+                value={jsonContent}
+                onChange={(e) => setJsonContent(e.target.value)}
+                placeholder="Paste your JSON data here or click 'Export to Editor' to load current cards..."
+                className="w-full h-full font-mono text-sm resize-none border-0 rounded-none p-6"
+              />
             </div>
           ) : (
             <>
