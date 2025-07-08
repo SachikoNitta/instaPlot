@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo, memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,101 @@ interface CaseCard {
   x: number
   y: number
 }
+
+// Memoized card component to prevent unnecessary re-renders
+const MemoizedCard = memo(({ 
+  card, 
+  selectedCardId, 
+  draggingCardId, 
+  onDragStart, 
+  onDragEnd, 
+  onClick, 
+  onEdit, 
+  onDelete 
+}: {
+  card: CaseCard
+  selectedCardId: string | null
+  draggingCardId: string | null
+  onDragStart: (id: string) => void
+  onDragEnd: (id: string, x: number, y: number) => void
+  onClick: (id: string, e: React.MouseEvent) => void
+  onEdit: (id: string) => void
+  onDelete: (id: string) => void
+}) => (
+  <motion.div
+    key={card.id}
+    drag
+    dragMomentum={false}
+    onDragStart={() => onDragStart(card.id)}
+    onDragEnd={(_, info) => onDragEnd(card.id, card.x + info.offset.x, card.y + info.offset.y)}
+    initial={{ x: card.x, y: card.y }}
+    animate={{ x: card.x, y: card.y }}
+    className="absolute cursor-move"
+    whileDrag={{ scale: 1.05, zIndex: 10 }}
+    onClick={(e) => onClick(card.id, e)}
+  >
+    <div className="relative">
+      <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <Badge variant={card.is_lie ? "destructive" : "default"} className="text-xs">
+              {card.is_lie ? (
+                <>
+                  <AlertTriangle className="w-3 h-3 mr-1" />
+                  Lie
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Truth
+                </>
+              )}
+            </Badge>
+          </div>
+          <CardTitle className="text-sm font-medium">{card.claims}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <Clock className="w-3 h-3" />
+            {new Date(card.time).toLocaleString()}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <User className="w-3 h-3" />
+            {card.actor}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <MapPin className="w-3 h-3" />
+            {card.place}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Overlay with action buttons */}
+      {selectedCardId === card.id && draggingCardId !== card.id && (
+        <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit(card.id)
+            }}
+            className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
+          >
+            <Edit className="w-4 h-4 text-gray-700" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(card.id)
+            }}
+            className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
+      )}
+    </div>
+  </motion.div>
+))
 
 export default function PlotBuilder() {
   const [cards, setCards] = useState<CaseCard[]>([])
@@ -93,7 +188,7 @@ export default function PlotBuilder() {
     }
   }, [cards, isLoaded])
 
-  const handleCreateCard = () => {
+  const handleCreateCard = useCallback(() => {
     if (!newCard.time || !newCard.actor || !newCard.place || !newCard.claims) return
 
     const card: CaseCard = {
@@ -103,142 +198,155 @@ export default function PlotBuilder() {
       y: Math.random() * 300 + 100,
     }
 
-    setCards([...cards, card])
+    setCards(prev => [...prev, card])
     setNewCard({ time: "", actor: "", place: "", claims: "", is_lie: false })
     setShowForm(false)
-  }
+  }, [newCard])
 
-  const updateCardPosition = (id: string, x: number, y: number) => {
-    setCards(cards.map((card) => (card.id === id ? { ...card, x, y } : card)))
-  }
 
-  const getUniqueValues = (key: "place" | "actor" | "time") => {
+  const getUniqueValues = useCallback((key: "place" | "actor" | "time", cardList: CaseCard[]) => {
     if (key === "time") {
-      return cards.map((card) => card.time).sort()
+      return cardList.map((card) => card.time).sort()
     }
-    return [...new Set(cards.map((card) => card[key]))]
-  }
+    return [...new Set(cardList.map((card) => card[key]))]
+  }, [])
 
-
-  const getGridPosition = (card: CaseCard) => {
-    const xUniqueValues = getUniqueValues(xAxisMode)
-    const yUniqueValues = getUniqueValues(yAxisMode)
+  const getGridPosition = useCallback((card: CaseCard, cardList: CaseCard[], xMode: string, yMode: string) => {
+    const xUniqueValues = getUniqueValues(xMode as "place" | "actor" | "time", cardList)
+    const yUniqueValues = getUniqueValues(yMode as "place" | "actor" | "time", cardList)
     
     let xPos = 100
     let yPos = 100
 
-    if (xAxisMode === "time") {
+    if (xMode === "time") {
       const timeValue = new Date(card.time).getTime()
-      const minTime = Math.min(...cards.map((c) => new Date(c.time).getTime()))
-      const maxTime = Math.max(...cards.map((c) => new Date(c.time).getTime()))
+      const minTime = Math.min(...cardList.map((c) => new Date(c.time).getTime()))
+      const maxTime = Math.max(...cardList.map((c) => new Date(c.time).getTime()))
       xPos = ((timeValue - minTime) / (maxTime - minTime || 1)) * 600 + 100
     } else {
-      const valueIndex = xUniqueValues.indexOf(card[xAxisMode])
+      const valueIndex = xUniqueValues.indexOf(card[xMode as keyof CaseCard] as string)
       xPos = valueIndex * 200 + 100
     }
 
-    if (yAxisMode === "time") {
+    if (yMode === "time") {
       const timeValue = new Date(card.time).getTime()
-      const minTime = Math.min(...cards.map((c) => new Date(c.time).getTime()))
-      const maxTime = Math.max(...cards.map((c) => new Date(c.time).getTime()))
+      const minTime = Math.min(...cardList.map((c) => new Date(c.time).getTime()))
+      const maxTime = Math.max(...cardList.map((c) => new Date(c.time).getTime()))
       yPos = ((timeValue - minTime) / (maxTime - minTime || 1)) * 400 + 100
     } else {
-      const valueIndex = yUniqueValues.indexOf(card[yAxisMode])
+      const valueIndex = yUniqueValues.indexOf(card[yMode as keyof CaseCard] as string)
       yPos = valueIndex * 200 + 100
     }
 
     return { x: xPos, y: yPos }
-  }
+  }, [getUniqueValues])
 
-  const organizeCards = () => {
-    const updatedCards = cards.map((card) => ({
-      ...card,
-      ...getGridPosition(card),
-    }))
-    setCards(updatedCards)
-  }
+  const organizeCards = useCallback(() => {
+    setCards(currentCards => {
+      const updatedCards = currentCards.map((card) => ({
+        ...card,
+        ...getGridPosition(card, currentCards, xAxisMode, yAxisMode),
+      }))
+      return updatedCards
+    })
+  }, [getGridPosition, xAxisMode, yAxisMode])
 
 
-  const handleToggleJsonEditor = () => {
-    if (!showJsonEditor) {
-      // When opening JSON editor, populate with current cards
-      setJsonContent(JSON.stringify(cards, null, 2))
-    }
-    setShowJsonEditor(!showJsonEditor)
-  }
+  const handleToggleJsonEditor = useCallback(() => {
+    setShowJsonEditor(prev => {
+      if (!prev) {
+        // When opening JSON editor, populate with current cards
+        setJsonContent(JSON.stringify(cards, null, 2))
+      }
+      return !prev
+    })
+  }, [cards])
 
-  // Real-time JSON parsing effect
+  // Debounced JSON parsing effect
   useEffect(() => {
     if (showJsonEditor && jsonContent.trim()) {
-      try {
-        const parsedData = JSON.parse(jsonContent)
-        
-        if (Array.isArray(parsedData)) {
-          const validCards: CaseCard[] = []
+      const timeoutId = setTimeout(() => {
+        try {
+          const parsedData = JSON.parse(jsonContent)
           
-          parsedData.forEach((item) => {
-            if (item.time && item.actor && item.place && item.claims) {
-              const card: CaseCard = {
-                id: item.id || Date.now().toString() + Math.random().toString(36).substring(2, 11),
-                time: item.time,
-                actor: item.actor,
-                place: item.place,
-                claims: item.claims,
-                is_lie: item.is_lie || false,
-                x: item.x || Math.random() * 400 + 100,
-                y: item.y || Math.random() * 300 + 100,
+          if (Array.isArray(parsedData)) {
+            const validCards: CaseCard[] = []
+            
+            parsedData.forEach((item) => {
+              if (item.time && item.actor && item.place && item.claims) {
+                const card: CaseCard = {
+                  id: item.id || Date.now().toString() + Math.random().toString(36).substring(2, 11),
+                  time: item.time,
+                  actor: item.actor,
+                  place: item.place,
+                  claims: item.claims,
+                  is_lie: item.is_lie || false,
+                  x: item.x || Math.random() * 400 + 100,
+                  y: item.y || Math.random() * 300 + 100,
+                }
+                validCards.push(card)
               }
-              validCards.push(card)
-            }
-          })
+            })
 
-          if (validCards.length > 0) {
-            setCards(validCards)
+            if (validCards.length > 0) {
+              setCards(validCards)
+            }
           }
+        } catch (error) {
+          // Silently handle parse errors during typing
         }
-      } catch (error) {
-        // Silently handle parse errors during typing
-      }
+      }, 500) // 500ms debounce
+
+      return () => clearTimeout(timeoutId)
     }
   }, [jsonContent, showJsonEditor])
 
 
-  const handleDeleteCard = (cardId: string) => {
-    setCards(cards.filter(card => card.id !== cardId))
+  const handleDeleteCard = useCallback((cardId: string) => {
+    setCards(prev => prev.filter(card => card.id !== cardId))
     setSelectedCardId(null)
-  }
+  }, [])
 
-  const handleEditCard = (cardId: string) => {
+  const handleEditCard = useCallback((cardId: string) => {
     const cardToEdit = cards.find(card => card.id === cardId)
     if (cardToEdit) {
       setEditingCard(cardToEdit)
       setSelectedCardId(null)
     }
-  }
+  }, [cards])
 
-  const handleUpdateCard = () => {
+  const handleUpdateCard = useCallback(() => {
     if (!editingCard) return
     
-    setCards(cards.map(card => 
+    setCards(prev => prev.map(card => 
       card.id === editingCard.id ? editingCard : card
     ))
     setEditingCard(null)
-  }
+  }, [editingCard])
 
-  const handleCardClick = (cardId: string, e: React.MouseEvent) => {
+  const handleCardClick = useCallback((cardId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     // Only allow selection if the card wasn't just dragged
     if (draggingCardId !== cardId) {
-      setSelectedCardId(selectedCardId === cardId ? null : cardId)
+      setSelectedCardId(prev => prev === cardId ? null : cardId)
     }
-  }
+  }, [draggingCardId])
+
+  const handleDragStart = useCallback((cardId: string) => {
+    setDraggingCardId(cardId)
+    setSelectedCardId(null)
+  }, [])
+
+  const handleDragEnd = useCallback((cardId: string, x: number, y: number) => {
+    setCards(prev => prev.map((card) => (card.id === cardId ? { ...card, x, y } : card)))
+    // Clear dragging state after a small delay to prevent immediate click selection
+    setTimeout(() => setDraggingCardId(null), 100)
+  }, [])
 
   // Auto-organize cards when axis modes change
   useEffect(() => {
-    if (cards.length > 0) {
-      organizeCards()
-    }
-  }, [xAxisMode, yAxisMode])
+    organizeCards()
+  }, [xAxisMode, yAxisMode, organizeCards])
 
   // Close overlay when clicking elsewhere
   useEffect(() => {
@@ -334,86 +442,17 @@ export default function PlotBuilder() {
             <>
               {/* Cards */}
               {cards.map((card) => (
-                <motion.div
+                <MemoizedCard
                   key={card.id}
-                  drag
-                  dragMomentum={false}
-                  onDragStart={() => {
-                    setDraggingCardId(card.id)
-                    setSelectedCardId(null)
-                  }}
-                  onDragEnd={(_, info) => {
-                    updateCardPosition(card.id, card.x + info.offset.x, card.y + info.offset.y)
-                    // Clear dragging state after a small delay to prevent immediate click selection
-                    setTimeout(() => setDraggingCardId(null), 100)
-                  }}
-                  initial={{ x: card.x, y: card.y }}
-                  animate={{ x: card.x, y: card.y }}
-                  className="absolute cursor-move"
-                  whileDrag={{ scale: 1.05, zIndex: 10 }}
-                  onClick={(e) => handleCardClick(card.id, e)}
-                >
-                  <div className="relative">
-                    <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <Badge variant={card.is_lie ? "destructive" : "default"} className="text-xs">
-                            {card.is_lie ? (
-                              <>
-                                <AlertTriangle className="w-3 h-3 mr-1" />
-                                Lie
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Truth
-                              </>
-                            )}
-                          </Badge>
-                        </div>
-                        <CardTitle className="text-sm font-medium">{card.claims}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <Clock className="w-3 h-3" />
-                          {new Date(card.time).toLocaleString()}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <User className="w-3 h-3" />
-                          {card.actor}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <MapPin className="w-3 h-3" />
-                          {card.place}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Overlay with action buttons */}
-                    {selectedCardId === card.id && draggingCardId !== card.id && (
-                      <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleEditCard(card.id)
-                          }}
-                          className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
-                        >
-                          <Edit className="w-4 h-4 text-gray-700" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteCard(card.id)
-                          }}
-                          className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
+                  card={card}
+                  selectedCardId={selectedCardId}
+                  draggingCardId={draggingCardId}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onClick={handleCardClick}
+                  onEdit={handleEditCard}
+                  onDelete={handleDeleteCard}
+                />
               ))}
 
               {cards.length === 0 && (
