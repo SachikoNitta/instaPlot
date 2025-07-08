@@ -10,7 +10,7 @@ A professional visual case management tool for organizing and analyzing case inf
 - **Full-Screen Plot Area**: Maximizes available space with a professional dotted grid background
 - **Drag & Drop Interface**: Smooth card movement with Framer Motion animations
 - **Real-time Organization**: Cards automatically reorganize when switching axis modes
-- **Floating Controls**: Strategically positioned UI elements for optimal workflow
+- **VSCode-Style Activity Bar**: Left sidebar with import/export icons for quick access
 
 ### 🎛️ Dynamic Axis Configuration
 - **X-Axis Control**: Place, Actor, or Time (positioned at top center with directional arrows)
@@ -20,9 +20,10 @@ A professional visual case management tool for organizing and analyzing case inf
 
 ### 💾 Robust Data Management
 - **Auto-Save**: All cards automatically saved to browser localStorage
-- **JSON Import/Export**: Import case data from JSON files with validation
+- **JSON Import/Export**: Import and export case data with full validation
 - **Session Persistence**: Data survives page refreshes and browser restarts
 - **Error Handling**: Graceful handling of invalid data imports
+- **Smart Export**: Downloads include timestamp and are disabled when no cards exist
 
 ### 🃏 Rich Case Cards
 - **Comprehensive Data**: Time, Actor, Place, Claims, and Truth/Lie classification
@@ -145,7 +146,7 @@ interface CaseCard {
 
 ## 🔜 Roadmap
 
-- [ ] Export functionality (PDF, PNG, JSON)
+- [ ] Export functionality (PDF, PNG)
 - [ ] Advanced filtering and search
 - [ ] Collaboration features
 - [ ] Additional visualization modes

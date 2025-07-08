@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Upload, Trash2, Edit, ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react"
+import { Plus, MapPin, User, Clock, AlertTriangle, CheckCircle, Trash2, Edit, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Code } from "lucide-react"
 import { motion } from "framer-motion"
 
 interface CaseCard {
@@ -39,6 +39,8 @@ export default function PlotBuilder() {
   })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCard, setEditingCard] = useState<CaseCard | null>(null)
+  const [showJsonEditor, setShowJsonEditor] = useState(false)
+  const [jsonContent, setJsonContent] = useState("")
 
   // Load cards from localStorage on component mount
   useEffect(() => {
@@ -155,78 +157,50 @@ export default function PlotBuilder() {
     setCards(updatedCards)
   }
 
-  const handleImportCards = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
 
-    // Show warning if there are existing cards
-    if (cards.length > 0) {
-      const confirmImport = confirm(
-        `⚠️ Warning: Importing will replace all ${cards.length} existing cards.\n\nThis action cannot be undone. Do you want to continue?`
-      )
-      if (!confirmImport) {
-        // Reset input value to allow selecting the same file again
-        event.target.value = ""
-        return
-      }
+  const handleToggleJsonEditor = () => {
+    if (!showJsonEditor) {
+      // When opening JSON editor, populate with current cards
+      setJsonContent(JSON.stringify(cards, null, 2))
     }
+    setShowJsonEditor(!showJsonEditor)
+  }
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
+  // Real-time JSON parsing effect
+  useEffect(() => {
+    if (showJsonEditor && jsonContent.trim()) {
       try {
-        const content = e.target?.result as string
-        const importedData = JSON.parse(content)
+        const parsedData = JSON.parse(jsonContent)
         
-        // Validate imported data
-        if (!Array.isArray(importedData)) {
-          alert("Invalid JSON format. Expected an array of cards.")
-          return
-        }
+        if (Array.isArray(parsedData)) {
+          const validCards: CaseCard[] = []
+          
+          parsedData.forEach((item) => {
+            if (item.time && item.actor && item.place && item.claims) {
+              const card: CaseCard = {
+                id: item.id || Date.now().toString() + Math.random().toString(36).substring(2, 11),
+                time: item.time,
+                actor: item.actor,
+                place: item.place,
+                claims: item.claims,
+                is_lie: item.is_lie || false,
+                x: item.x || Math.random() * 400 + 100,
+                y: item.y || Math.random() * 300 + 100,
+              }
+              validCards.push(card)
+            }
+          })
 
-        const validCards: CaseCard[] = []
-        const errors: string[] = []
-
-        importedData.forEach((item, index) => {
-          // Validate required fields
-          if (!item.time || !item.actor || !item.place || !item.claims) {
-            errors.push(`Card ${index + 1}: Missing required fields (time, actor, place, claims)`)
-            return
+          if (validCards.length > 0) {
+            setCards(validCards)
           }
-
-          // Create valid card with defaults for missing optional fields
-          const card: CaseCard = {
-            id: item.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            time: item.time,
-            actor: item.actor,
-            place: item.place,
-            claims: item.claims,
-            is_lie: item.is_lie || false,
-            x: item.x || Math.random() * 400 + 100,
-            y: item.y || Math.random() * 300 + 100,
-          }
-
-          validCards.push(card)
-        })
-
-        if (errors.length > 0) {
-          alert(`Import completed with errors:\n${errors.join('\n')}\n\nValid cards: ${validCards.length}`)
-        } else {
-          alert(`Successfully imported ${validCards.length} cards`)
-        }
-
-        if (validCards.length > 0) {
-          setCards(validCards)
         }
       } catch (error) {
-        console.error("Error importing cards:", error)
-        alert("Error reading JSON file. Please check the file format.")
+        // Silently handle parse errors during typing
       }
     }
+  }, [jsonContent, showJsonEditor])
 
-    reader.readAsText(file)
-    // Reset input value to allow importing the same file again
-    event.target.value = ""
-  }
 
   const handleDeleteCard = (cardId: string) => {
     setCards(cards.filter(card => card.id !== cardId))
@@ -283,7 +257,7 @@ export default function PlotBuilder() {
         }}
       >
           {/* InstaPlot logo at top left */}
-          <div className="absolute top-4 left-4 z-10">
+          <div className="absolute top-4 left-16 z-10">
             <div className="text-xl font-bold text-gray-800">InstaPlot</div>
           </div>
 
@@ -304,7 +278,7 @@ export default function PlotBuilder() {
           </div>
 
           {/* Y-axis selector on left */}
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-10">
+          <div className="absolute left-16 top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-2 z-10">
             <ArrowUp className="w-4 h-4 text-gray-400" />
             <Select value={yAxisMode} onValueChange={(value: "place" | "actor" | "time") => setYAxisMode(value)}>
               <SelectTrigger className="w-24">
@@ -319,115 +293,136 @@ export default function PlotBuilder() {
             <ArrowDown className="w-4 h-4 text-gray-400" />
           </div>
 
-          {/* Import JSON button at top right */}
-          <div className="absolute top-4 right-4 z-10">
-            <div className="relative">
-              <Input
-                type="file"
-                accept=".json"
-                onChange={handleImportCards}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
-              <Button variant="outline" className="flex items-center gap-2">
-                <Upload className="w-4 h-4" />
-                Import JSON
-              </Button>
-            </div>
-          </div>
-          {/* Cards */}
-          {cards.map((card) => (
-            <motion.div
-              key={card.id}
-              drag
-              dragMomentum={false}
-              onDragEnd={(_, info) => {
-                updateCardPosition(card.id, card.x + info.offset.x, card.y + info.offset.y)
-              }}
-              initial={{ x: card.x, y: card.y }}
-              animate={{ x: card.x, y: card.y }}
-              className="absolute cursor-move"
-              whileDrag={{ scale: 1.05, zIndex: 10 }}
-              onClick={(e) => handleCardClick(card.id, e)}
+          {/* Activity Bar - VSCode style */}
+          <div className="absolute left-0 top-0 h-full w-12 bg-gray-900 flex flex-col items-center py-4 gap-2 z-20">
+            {/* Toggle JSON Editor */}
+            <button 
+              onClick={handleToggleJsonEditor}
+              className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+                showJsonEditor 
+                  ? 'bg-gray-700 text-white' 
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+              }`}
             >
-              <div className="relative">
-                <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <Badge variant={card.is_lie ? "destructive" : "default"} className="text-xs">
-                      {card.is_lie ? (
-                        <>
-                          <AlertTriangle className="w-3 h-3 mr-1" />
-                          Lie
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Truth
-                        </>
-                      )}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-sm font-medium">{card.claims}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <Clock className="w-3 h-3" />
-                    {new Date(card.time).toLocaleString()}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <User className="w-3 h-3" />
-                    {card.actor}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <MapPin className="w-3 h-3" />
-                    {card.place}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* Overlay with action buttons */}
-              {selectedCardId === card.id && (
-                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleEditCard(card.id)
-                    }}
-                    className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
-                  >
-                    <Edit className="w-4 h-4 text-gray-700" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteCard(card.id)
-                    }}
-                    className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
-              )}
-            </div>
-            </motion.div>
-          ))}
+              <Code className="w-4 h-4" />
+            </button>
 
-          {cards.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <Plus className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No cards yet. Click the + button to get started.</p>
+          </div>
+
+          {/* JSON Editor Pane */}
+          {showJsonEditor ? (
+            <div className="absolute left-16 top-4 right-4 bottom-4 bg-white rounded-lg shadow-sm border p-6 z-10">
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">JSON Editor</h2>
+                </div>
+                
+                <Textarea
+                  value={jsonContent}
+                  onChange={(e) => setJsonContent(e.target.value)}
+                  placeholder="Paste your JSON data here or click 'Export to Editor' to load current cards..."
+                  className="flex-1 font-mono text-sm resize-none"
+                />
               </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Cards */}
+              {cards.map((card) => (
+                <motion.div
+                  key={card.id}
+                  drag
+                  dragMomentum={false}
+                  onDragEnd={(_, info) => {
+                    updateCardPosition(card.id, card.x + info.offset.x, card.y + info.offset.y)
+                  }}
+                  initial={{ x: card.x, y: card.y }}
+                  animate={{ x: card.x, y: card.y }}
+                  className="absolute cursor-move"
+                  whileDrag={{ scale: 1.05, zIndex: 10 }}
+                  onClick={(e) => handleCardClick(card.id, e)}
+                >
+                  <div className="relative">
+                    <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <Badge variant={card.is_lie ? "destructive" : "default"} className="text-xs">
+                            {card.is_lie ? (
+                              <>
+                                <AlertTriangle className="w-3 h-3 mr-1" />
+                                Lie
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Truth
+                              </>
+                            )}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-sm font-medium">{card.claims}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <Clock className="w-3 h-3" />
+                          {new Date(card.time).toLocaleString()}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <User className="w-3 h-3" />
+                          {card.actor}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <MapPin className="w-3 h-3" />
+                          {card.place}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Overlay with action buttons */}
+                    {selectedCardId === card.id && (
+                      <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditCard(card.id)
+                          }}
+                          className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
+                        >
+                          <Edit className="w-4 h-4 text-gray-700" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteCard(card.id)
+                          }}
+                          className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
 
-          {/* Floating Add Card Button */}
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="absolute bottom-4 right-4 w-12 h-12 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-10"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
+              {cards.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <Plus className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No cards yet. Click the + button to get started.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Floating Add Card Button */}
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="absolute bottom-4 right-4 w-12 h-12 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-10"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Create Card Modal */}
