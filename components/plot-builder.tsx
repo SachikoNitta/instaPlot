@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo, memo } from "react"
+import { useState, useEffect, useCallback, memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,17 +68,28 @@ const MemoizedCard = memo(({
     >
       <div className="relative">
         <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
-          {/* Inline Edit Button */}
+          {/* Action Buttons */}
           {!isInlineEditing && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onInlineEdit(card.id)
-              }}
-              className="absolute top-2 right-2 w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center z-10 transition-colors"
-            >
-              <Edit className="w-3 h-3 text-gray-600" />
-            </button>
+            <div className="absolute top-2 right-2 flex gap-1 z-10">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onInlineEdit(card.id)
+                }}
+                className="w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+              >
+                <Edit className="w-3 h-3 text-gray-600" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(card.id)
+                }}
+                className="w-6 h-6 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors"
+              >
+                <Trash2 className="w-3 h-3 text-red-600" />
+              </button>
+            </div>
           )}
           
           {/* Save Button when editing */}
@@ -220,16 +231,8 @@ export default function PlotBuilder() {
   const [cards, setCards] = useState<CaseCard[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  const [showForm, setShowForm] = useState(false)
   const [xAxisMode, setXAxisMode] = useState<"place" | "actor" | "time">("place")
   const [yAxisMode, setYAxisMode] = useState<"place" | "actor" | "time">("time")
-  const [newCard, setNewCard] = useState({
-    time: "",
-    actor: "",
-    place: "",
-    claims: "",
-    is_lie: false,
-  })
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCard, setEditingCard] = useState<CaseCard | null>(null)
   const [showJsonEditor, setShowJsonEditor] = useState(false)
@@ -288,19 +291,22 @@ export default function PlotBuilder() {
   }, [cards, isLoaded])
 
   const handleCreateCard = useCallback(() => {
-    if (!newCard.time || !newCard.actor || !newCard.place || !newCard.claims) return
-
+    const now = new Date()
     const card: CaseCard = {
       id: Date.now().toString(),
-      ...newCard,
+      time: now.toISOString().slice(0, 16), // Format for datetime-local input
+      actor: "New Actor",
+      place: "New Place",
+      claims: "New claim...",
+      is_lie: false,
       x: Math.random() * 400 + 100,
       y: Math.random() * 300 + 100,
     }
 
     setCards(prev => [...prev, card])
-    setNewCard({ time: "", actor: "", place: "", claims: "", is_lie: false })
-    setShowForm(false)
-  }, [newCard])
+    // Immediately start editing the new card
+    setInlineEditingCardId(card.id)
+  }, [])
 
 
   const getUniqueValues = useCallback((key: "place" | "actor" | "time", cardList: CaseCard[]) => {
@@ -584,7 +590,7 @@ export default function PlotBuilder() {
 
               {/* Floating Add Card Button */}
               <button
-                onClick={() => setShowForm(!showForm)}
+                onClick={handleCreateCard}
                 className="fixed bottom-4 right-4 w-12 h-12 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-30"
               >
                 <Plus className="w-6 h-6" />
@@ -593,66 +599,6 @@ export default function PlotBuilder() {
           )}
         </div>
 
-        {/* Create Card Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">Create New Card</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="time">Time</Label>
-                  <Input
-                    id="time"
-                    type="datetime-local"
-                    value={newCard.time}
-                    onChange={(e) => setNewCard({ ...newCard, time: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="actor">Actor</Label>
-                  <Input
-                    id="actor"
-                    placeholder="Person involved"
-                    value={newCard.actor}
-                    onChange={(e) => setNewCard({ ...newCard, actor: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="place">Place</Label>
-                  <Input
-                    id="place"
-                    placeholder="Location"
-                    value={newCard.place}
-                    onChange={(e) => setNewCard({ ...newCard, place: e.target.value })}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="is-lie"
-                    checked={newCard.is_lie}
-                    onCheckedChange={(checked) => setNewCard({ ...newCard, is_lie: checked })}
-                  />
-                  <Label htmlFor="is-lie">Mark as lie</Label>
-                </div>
-                <div>
-                  <Label htmlFor="claims">Claims</Label>
-                  <Textarea
-                    id="claims"
-                    placeholder="What was claimed or observed..."
-                    value={newCard.claims}
-                    onChange={(e) => setNewCard({ ...newCard, claims: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-6">
-                <Button onClick={handleCreateCard}>Create Card</Button>
-                <Button variant="outline" onClick={() => setShowForm(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Edit Card Modal */}
         {editingCard && (
