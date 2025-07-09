@@ -26,12 +26,10 @@ interface CaseCard {
 // Memoized card component to prevent unnecessary re-renders
 const MemoizedCard = memo(({ 
   card, 
-  selectedCardId, 
   draggingCardId, 
   inlineEditingCardId,
   onDragStart, 
   onDragEnd, 
-  onClick, 
   onEdit, 
   onDelete,
   onInlineEdit,
@@ -39,12 +37,10 @@ const MemoizedCard = memo(({
   onInlineEditComplete
 }: {
   card: CaseCard
-  selectedCardId: string | null
   draggingCardId: string | null
   inlineEditingCardId: string | null
   onDragStart: (id: string) => void
   onDragEnd: (id: string, x: number, y: number) => void
-  onClick: (id: string, e: React.MouseEvent) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   onInlineEdit: (id: string) => void
@@ -64,7 +60,6 @@ const MemoizedCard = memo(({
       animate={{ x: card.x, y: card.y }}
       className="absolute cursor-move"
       whileDrag={{ scale: 1.05, zIndex: 10 }}
-      onClick={(e) => !isInlineEditing && onClick(card.id, e)}
     >
       <div className="relative">
         <Card className="w-64 shadow-md hover:shadow-lg transition-shadow bg-white/90">
@@ -199,29 +194,6 @@ const MemoizedCard = memo(({
           </CardContent>
         </Card>
         
-        {/* Overlay with action buttons */}
-        {selectedCardId === card.id && draggingCardId !== card.id && !isInlineEditing && (
-          <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2 z-20">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onEdit(card.id)
-              }}
-              className="bg-white hover:bg-gray-100 p-2 rounded-full shadow-lg transition-colors"
-            >
-              <Edit className="w-4 h-4 text-gray-700" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(card.id)
-              }}
-              className="bg-white hover:bg-red-50 p-2 rounded-full shadow-lg transition-colors"
-            >
-              <Trash2 className="w-4 h-4 text-red-600" />
-            </button>
-          </div>
-        )}
       </div>
     </motion.div>
   )
@@ -233,7 +205,6 @@ export default function PlotBuilder() {
 
   const [xAxisMode, setXAxisMode] = useState<"place" | "actor" | "time">("place")
   const [yAxisMode, setYAxisMode] = useState<"place" | "actor" | "time">("time")
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [editingCard, setEditingCard] = useState<CaseCard | null>(null)
   const [showJsonEditor, setShowJsonEditor] = useState(false)
   const [jsonContent, setJsonContent] = useState("")
@@ -409,14 +380,12 @@ export default function PlotBuilder() {
 
   const handleDeleteCard = useCallback((cardId: string) => {
     setCards(prev => prev.filter(card => card.id !== cardId))
-    setSelectedCardId(null)
   }, [])
 
   const handleEditCard = useCallback((cardId: string) => {
     const cardToEdit = cards.find(card => card.id === cardId)
     if (cardToEdit) {
       setEditingCard(cardToEdit)
-      setSelectedCardId(null)
     }
   }, [cards])
 
@@ -429,17 +398,9 @@ export default function PlotBuilder() {
     setEditingCard(null)
   }, [editingCard])
 
-  const handleCardClick = useCallback((cardId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    // Only allow selection if the card wasn't just dragged
-    if (draggingCardId !== cardId) {
-      setSelectedCardId(prev => prev === cardId ? null : cardId)
-    }
-  }, [draggingCardId])
 
   const handleDragStart = useCallback((cardId: string) => {
     setDraggingCardId(cardId)
-    setSelectedCardId(null)
   }, [])
 
   const handleDragEnd = useCallback((cardId: string, x: number, y: number) => {
@@ -450,7 +411,6 @@ export default function PlotBuilder() {
 
   const handleInlineEdit = useCallback((cardId: string) => {
     setInlineEditingCardId(cardId)
-    setSelectedCardId(null)
   }, [])
 
   const handleInlineUpdate = useCallback((cardId: string, field: keyof CaseCard, value: string | boolean) => {
@@ -468,14 +428,6 @@ export default function PlotBuilder() {
     organizeCards()
   }, [xAxisMode, yAxisMode, organizeCards])
 
-  // Close overlay when clicking elsewhere
-  useEffect(() => {
-    const handleClickOutside = () => setSelectedCardId(null)
-    if (selectedCardId) {
-      document.addEventListener('click', handleClickOutside)
-      return () => document.removeEventListener('click', handleClickOutside)
-    }
-  }, [selectedCardId])
 
   return (
     <div className="h-screen bg-white">
@@ -565,12 +517,10 @@ export default function PlotBuilder() {
                 <MemoizedCard
                   key={card.id}
                   card={card}
-                  selectedCardId={selectedCardId}
                   draggingCardId={draggingCardId}
                   inlineEditingCardId={inlineEditingCardId}
                   onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
-                  onClick={handleCardClick}
                   onEdit={handleEditCard}
                   onDelete={handleDeleteCard}
                   onInlineEdit={handleInlineEdit}
