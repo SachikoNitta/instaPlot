@@ -2,7 +2,12 @@
 
 A professional visual case management tool for organizing and analyzing case information cards in an interactive workspace. Perfect for investigators, researchers, and analysts who need to visualize relationships between events, people, and locations.
 
+🌐 **[Live Demo](https://insta-plot.vercel.app)**
+
 ![InstaPlot Screenshot](./public/screenshot.png)
+
+### JSON Editor Mode
+![JSON Editor Screenshot](./public/screenshot_json.png)
 
 ## ✨ Features
 
@@ -10,7 +15,7 @@ A professional visual case management tool for organizing and analyzing case inf
 - **Full-Screen Plot Area**: Maximizes available space with a professional dotted grid background
 - **Drag & Drop Interface**: Smooth card movement with Framer Motion animations
 - **Real-time Organization**: Cards automatically reorganize when switching axis modes
-- **VSCode-Style Activity Bar**: Left sidebar with import/export icons for quick access
+- **Clean Minimalist Design**: Distraction-free workspace with floating controls
 
 ### 🎛️ Dynamic Axis Configuration
 - **X-Axis Control**: Place, Actor, or Time (positioned at top center with directional arrows)
@@ -18,24 +23,26 @@ A professional visual case management tool for organizing and analyzing case inf
 - **Instant Reorganization**: Cards automatically arrange when axis modes change
 - **Visual Feedback**: Clear directional indicators for each axis
 
-### 💾 Robust Data Management
+### 💾 Data Management
 - **Auto-Save**: All cards automatically saved to browser localStorage
-- **JSON Import/Export**: Import and export case data with full validation
+- **JSON Editor**: Live JSON editing with real-time preview and validation
 - **Session Persistence**: Data survives page refreshes and browser restarts
-- **Error Handling**: Graceful handling of invalid data imports
-- **Smart Export**: Downloads include timestamp and are disabled when no cards exist
+- **Default Sample Data**: Starts with example cards to demonstrate functionality
+- **Flexible Import**: Supports JSON import with automatic field validation
 
-### 🃏 Rich Case Cards
+### 🃏 Smart Case Cards
 - **Comprehensive Data**: Time, Actor, Place, Claims, and Truth/Lie classification
 - **Visual Indicators**: Color-coded badges for truth (✓) vs lie (⚠) status
-- **Interactive Cards**: Click to select, edit, or delete with overlay controls
-- **Card Actions**: Edit and delete buttons appear on card selection
+- **Inline Editing**: Click edit button to modify cards directly on the plot
+- **Dual Edit Modes**: Both inline editing and modal editing available
 - **Professional Design**: Semi-transparent cards with shadows and hover effects
+- **Quick Actions**: Edit and delete buttons appear on each card
 
 ### 🎨 Modern UI/UX
-- **Modal Forms**: Clean, centered forms for card creation and editing
+- **Floating Controls**: Minimalist floating action button for adding new cards
+- **JSON Toggle**: Quick access to JSON editor mode for bulk operations
 - **Responsive Design**: Works across different screen sizes
-- **Professional Aesthetics**: Minimalist design with subtle animations
+- **Professional Aesthetics**: Clean design with subtle animations and transitions
 - **Intuitive Navigation**: Logical control placement and visual hierarchy
 
 ## 🚀 Getting Started
@@ -87,23 +94,37 @@ npm start
 - **Framework**: Next.js 15.2.4 with App Router
 - **Language**: TypeScript for type safety
 - **Styling**: Tailwind CSS with custom safelist configuration
-- **UI Components**: Radix UI primitives with custom styling
-- **Animation**: Framer Motion for smooth interactions
+- **UI Components**: Radix UI primitives with shadcn/ui components
+- **Animation**: Framer Motion for smooth drag-and-drop interactions
 - **Icons**: Lucide React for consistent iconography
 - **State Management**: React hooks with localStorage persistence
+- **Forms**: React Hook Form with Zod validation
+- **Theming**: next-themes for theme management
 
 ## 📁 Project Structure
 
 ```
 instaPlot/
 ├── app/
-│   ├── layout.tsx             # Root layout with CSS imports
+│   ├── layout.tsx             # Root layout with theme provider
 │   ├── page.tsx               # Main page component
 │   └── globals.css            # Global styles and CSS variables
 ├── components/
 │   ├── plot-builder.tsx       # Core application component
-│   └── ui/                    # Reusable UI components
-├── tailwind.config.ts         # Tailwind configuration with safelist
+│   ├── theme-provider.tsx     # Theme context provider
+│   └── ui/                    # shadcn/ui components
+├── hooks/
+│   ├── use-mobile.tsx         # Mobile detection hook
+│   └── use-toast.ts           # Toast notification hook
+├── lib/
+│   └── utils.ts               # Utility functions
+├── styles/
+│   └── globals.css            # Additional global styles
+├── public/
+│   └── screenshot.png         # App screenshot
+├── sample-cards.json          # Example card data
+├── components.json            # shadcn/ui configuration
+├── tailwind.config.ts         # Tailwind configuration
 ├── postcss.config.mjs         # PostCSS configuration
 ├── next.config.mjs            # Next.js configuration
 └── package.json               # Dependencies and scripts
@@ -146,13 +167,16 @@ interface CaseCard {
 
 ## 🔜 Roadmap
 
-- [ ] Export functionality (PDF, PNG)
-- [ ] Advanced filtering and search
-- [ ] Collaboration features
-- [ ] Additional visualization modes
-- [ ] Data analytics and insights
-- [ ] Theme customization
-- [ ] Mobile app version
+- [ ] SSO login integration (Google, GitHub, Microsoft)
+- [ ] Cloud data storage and synchronization
+- [ ] Multiple plot management (save/load different sets of cards)
+- [ ] Export functionality (PDF, PNG, CSV)
+- [ ] Advanced filtering and search within cards
+- [ ] Undo/redo functionality for card operations
+- [ ] Card templates and presets
+- [ ] Bulk card operations via JSON editor
+- [ ] Keyboard shortcuts for common actions
+- [ ] Print-friendly layouts
 
 ## 🤝 Contributing
 
